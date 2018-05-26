@@ -1,0 +1,126 @@
+<?php
+
+//TODO rendere configurabile la pagina dove deve comparire la mappa e se creare il blocco
+
+// Loading blocks.
+module_load_include('inc','umnw_gmap','umnw_gmap.blocks');
+
+/**
+ * Implements hook_menu().
+ */
+function umnw_gmap_menu() {
+
+  $items = [];
+
+  $items['admin/config/umnw_helpers/gmap'] = [
+    'title' => 'UMNW Google Maps',
+    'description' => t('Allow to manage umnw_gmap configuration.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => ['umnw_gmap_conf_form'],
+    'access arguments' => ['administer site configuration'],
+  ];
+
+  return $items;
+}
+
+/**
+ * Implements hook_init().
+ */
+function umnw_gmap_init(){
+  $gmap_conf = variable_get('gmap_conf',false);
+  if($gmap_conf !== FALSE){
+    drupal_add_js(['umnw_gmap' =>  ['conf' => $gmap_conf]], 'setting');
+  }
+}
+
+/**
+ * Returning an array of configuration parameters.
+ * @return array
+ */
+function umnw_gmap_get_config_vars(){
+  // Preparing structure
+  $configVars = [
+    'umnw_gmap_lat' => [
+      'title' => t('Latitude'),
+      'description' => t('Use always dot separator'),
+    ],
+    'umnw_gmap_lng' => [
+      'title' => t('Longitude'),
+      'description' => t('Use always dot separator'),
+    ],
+    'umnw_gmap_dialogTitle' => [
+      'title' => t('Dialog title'),
+      'description' => t('Title of Dialog cloud that appears when you click on the marker'),
+    ],
+    'umnw_gmap_markerTitle' => [
+      'title' => t('Marker title'),
+      'description' => '',
+    ],
+    'umnw_gmap_zoomLevel' => [
+      'title' => t('Zoom Level'),
+      'description' => '',
+    ],
+    'umnw_gmap_gmapApiKey' => [
+      'title' => t('Google Maps API key'),
+      'description' => '',
+    ],
+  ];
+  return $configVars;
+}
+
+/**
+ * Umnw configuration form
+ * @param $form
+ * @param $form_state
+ *
+ * @return mixed
+ */
+function umnw_gmap_conf_form($form,&$form_state){
+  // Getting default config vars.
+  $configVars = umnw_gmap_get_config_vars();
+  $form_state['storage']['config_vars'] = $configVars;
+  // Getting variable from already available configuration (database).
+  $gmap_conf = variable_get('gmap_conf',array());
+  // Prepopulating settings.
+  // Building form.
+  foreach($configVars as $machine_name => $data){
+    $form[$machine_name] = [
+      '#type' => 'textfield',
+      '#title' => $data['title'],
+      '#description' => $data['description'],
+      '#value' => isset($gmap_conf[$machine_name]) ? $gmap_conf[$machine_name] : '',
+    ];
+  }
+
+  $form['submit'] = [
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  ];
+
+  return $form;
+}
+
+/**
+ * @param $form
+ * @param $form_state
+ */
+function umnw_gmap_conf_form_validate($form,&$form_state){}
+
+/**
+ * @param $form
+ * @param $form_state
+ */
+function umnw_gmap_conf_form_submit($form,&$form_state){
+  // Init $gmap_conf
+  $gmap_conf = [];
+  // Getting default empty variables.
+  $configVars = $form_state['storage']['config_vars'];
+  // Removing unnecessary values.
+  foreach($configVars as $machine_name => $data){
+    // Setting $gmap_conf values.
+    $gmap_conf[$machine_name] = $form_state['input'][$machine_name];
+  }
+  // Setting configuration variables
+  variable_set('gmap_conf',$gmap_conf);
+  drupal_set_message(t('Gmap Config saved!'));
+}

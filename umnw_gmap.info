@@ -1,0 +1,10 @@
+name = UMNW GMaps
+description = UMNW Google Maps
+package = Un moscerino nel web
+core = 7.x
+
+dependencies[] = umnw_helpers
+
+
+scripts[] = js/gmap.js
+stylesheets[all][] = less/gmap.less
